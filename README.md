@@ -51,18 +51,41 @@ The project simulates a small-scale trading system with clients, currencies, and
 ## Example Queries
 
 ### 1. All trades for a client in the last 7 days
+
 ```sql
 SELECT c.ClientName, t.CurrencyCode, t.Amount, t.TradeType, t.TradeDate
 FROM Trade t
 JOIN Client c ON t.ClientID = c.ClientID
 WHERE c.ClientName = 'Alpha Capital'
   AND t.TradeDate >= DATEADD(DAY, -7, GETDATE());
-
+```
 ### 2. Top 5 currencies traded by total volume
+
 ```sql
 SELECT t.CurrencyCode, SUM(t.Amount) AS TotalVolume
 FROM Trade t
 GROUP BY t.CurrencyCode
 ORDER BY TotalVolume DESC
-OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;
+```
+### 3. Biggest trade per client
 
+```sql
+SELECT ClientName, CurrencyCode, Amount, TradeDate
+FROM (
+    SELECT c.ClientName, t.CurrencyCode, t.Amount, t.TradeDate,
+           ROW_NUMBER() OVER (PARTITION BY c.ClientID ORDER BY t.Amount DESC) AS rn
+    FROM Trade t
+    JOIN Client c ON t.ClientID = c.ClientID
+) sub
+WHERE rn = 1;
+```
+### 4. Total BUY vs SELL per client
+
+```sql
+SELECT c.ClientName,
+       SUM(CASE WHEN t.TradeType = 'BUY' THEN t.Amount ELSE 0 END) AS TotalBuys,
+       SUM(CASE WHEN t.TradeType = 'SELL' THEN t.Amount ELSE 0 END) AS TotalSells
+FROM Trade t
+JOIN Client c ON t.ClientID = c.ClientID
+GROUP BY c.ClientName;
+```
