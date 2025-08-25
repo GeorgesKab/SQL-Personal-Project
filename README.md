@@ -57,7 +57,7 @@ SELECT c.ClientName, t.CurrencyCode, t.Amount, t.TradeType, t.TradeDate
 FROM Trade t
 JOIN Client c ON t.ClientID = c.ClientID
 WHERE c.ClientName = 'Alpha Capital'
-  AND t.TradeDate >= DATEADD(DAY, -7, GETDATE());
+  AND t.TradeDate between '2025-08-1' and '2025-08-10'
 ```
 ### 2. Top 5 currencies traded by total volume
 
